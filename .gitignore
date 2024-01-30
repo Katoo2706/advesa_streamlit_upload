@@ -1,0 +1,6 @@
+.idea
+
+venv
+/source/gdrive/service_account.json
+/.streamlit/
+test.py
