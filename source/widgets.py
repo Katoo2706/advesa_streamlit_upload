@@ -49,7 +49,6 @@ def __home__(username, email):
 
             processed_df = process_upload_file(df)
 
-            print("Uploading file to Google drive")
             upload_file = upload_file_from_memory(data=processed_df,
                                                   file_name=ga_df['name'],
                                                   folder_id=st.secrets["GDRIVE_FOLDER_ID"])

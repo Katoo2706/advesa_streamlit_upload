@@ -16,6 +16,7 @@ class Emails:
         pass
 
     def send_email(self, receiver: str, subject: str, body: str):
+        print(receiver)
         # Create MIMEMultipart object
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject

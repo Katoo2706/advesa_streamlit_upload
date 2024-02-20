@@ -4,3 +4,6 @@ venv
 /source/gdrive/service_account.json
 /.streamlit/
 test.py
+
+__pycache__/
+_secret_auth_.json
