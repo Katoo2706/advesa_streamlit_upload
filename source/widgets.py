@@ -30,7 +30,7 @@ def __home__(username, email):
     instruction_html = """
         <p style="font-family: 'Helvetica Neue', sans-serif; font-size: 16px; color: auto; line-height: 1.6;">
             &nbsp 👉 Click "Browse files" and upload the CSV files.<br>
-            &nbsp 👉 Data to return: Columns to mark CB's customers or HA's customer & geo-data.
+            &nbsp 👉 Data to return: Columns to mark CB's customers or HA's customers & geo-data.
         </p>
     """
 
@@ -39,8 +39,8 @@ def __home__(username, email):
     ga_df = upload_csv(title="Please upload Give away files from King Sumo (can upload multiple files):",
                        accept_multiple=True)
     if ga_df:
-        st.success(f"Upload files successfully, number of files: {len(ga_df['data'])}. "
-                   f"Data will be sent via your emails in the new few minutes! 😊")
+        st.success(f"Files uploaded successfully, number of files: {len(ga_df['data'])}. "
+                   f"You will receive an email with the data shortly.! 😊")
 
         if 'PROCESS_DATA' not in st.session_state:
             st.session_state["PROCESS_DATA"] = True

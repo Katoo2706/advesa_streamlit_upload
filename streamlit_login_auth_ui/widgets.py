@@ -110,7 +110,8 @@ class __login__:
                 login_submit_button = st.form_submit_button(label='Login')
 
                 if login_submit_button:
-                    authenticate_user_check = check_usr_pass(db_conn=MongoConnection, username=username, password=password)
+                    authenticate_user_check = check_usr_pass(db_conn=MongoConnection,
+                                                             username=username, password=password)
 
                     if not authenticate_user_check:
                         st.error("Invalid Username or Password!")

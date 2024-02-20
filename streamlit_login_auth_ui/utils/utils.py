@@ -14,33 +14,17 @@ def check_usr_pass(db_conn: MongoClient, username: str, password: str) -> bool:
     Authenticates the username and password.
     """
 
-    user_data = list(db_conn['users'].find())
-
-    if len(user_data) > 0:
-        for user in user_data:
-            if username == user['username']:
-                if user['username'] == username:
-                    try:
-                        passwd_verification_bool = ph.verify(user['password'], password)
-                        if passwd_verification_bool:
-                            return True
-                    except:
-                        pass
-            return False
-
-    # with open("_secret_auth_.json", "r") as auth_json:
-    #     authorized_user_data = json.load(auth_json)
-
-    # for registered_user in authorized_user_data:
-    #     if registered_user['username'] == username:
-    #         try:
-    #             passwd_verification_bool = ph.verify(registered_user['password'], password)
-    #             if passwd_verification_bool:
-    #                 return True
-    #         except:
-    #             pass
-    # return False
-
+    user_data = db_conn['users'].find(
+        {"username": username}
+    )
+    if user_data:
+        try:
+            passwd_verification_bool = ph.verify(user_data['password'], password)
+            if passwd_verification_bool:
+                return True
+        except:
+            pass
+    return False
 
 def load_lottieurl(url: str) -> None:
     """
