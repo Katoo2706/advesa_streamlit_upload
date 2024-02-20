@@ -11,7 +11,7 @@ from streamlit_login_auth_ui.utils import (
     send_passwd_in_email,
     change_passwd, check_current_passwd,
     get_email, check_advesa_email)
-
+from source.conf import MongoConnection
 
 class __login__:
     """
@@ -79,7 +79,7 @@ class __login__:
     def get_email(self):
         username = self.get_username()
 
-        email_exist, email = get_email(username)
+        email_exist, email = get_email(db_conn=MongoConnection, username=username)
 
         if email_exist:
             return email
@@ -110,7 +110,7 @@ class __login__:
                 login_submit_button = st.form_submit_button(label='Login')
 
                 if login_submit_button:
-                    authenticate_user_check = check_usr_pass(username, password)
+                    authenticate_user_check = check_usr_pass(db_conn=MongoConnection, username=username, password=password)
 
                     if not authenticate_user_check:
                         st.error("Invalid Username or Password!")
@@ -173,7 +173,11 @@ class __login__:
                         if valid_advesa_email_check:
                             if unique_email_check:
                                 if unique_username_check:
-                                    register_new_usr(name_sign_up, email_sign_up, username_sign_up, password_sign_up)
+                                    register_new_usr(db_conn=MongoConnection,
+                                                     name_sign_up=name_sign_up,
+                                                     email_sign_up=email_sign_up,
+                                                     username_sign_up=username_sign_up,
+                                                     password_sign_up=password_sign_up)
                                     st.success("Registration Successful!")
 
     def forgot_password(self) -> None:

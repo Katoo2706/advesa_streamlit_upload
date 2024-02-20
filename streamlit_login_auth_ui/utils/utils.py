@@ -4,26 +4,42 @@ from trycourier import Courier
 import secrets
 from argon2 import PasswordHasher
 import requests
+from pymongo import MongoClient
 
 ph = PasswordHasher()
 
 
-def check_usr_pass(username: str, password: str) -> bool:
+def check_usr_pass(db_conn: MongoClient, username: str, password: str) -> bool:
     """
     Authenticates the username and password.
     """
-    with open("_secret_auth_.json", "r") as auth_json:
-        authorized_user_data = json.load(auth_json)
 
-    for registered_user in authorized_user_data:
-        if registered_user['username'] == username:
-            try:
-                passwd_verification_bool = ph.verify(registered_user['password'], password)
-                if passwd_verification_bool:
-                    return True
-            except:
-                pass
-    return False
+    user_data = list(db_conn['users'].find())
+
+    if len(user_data) > 0:
+        for user in user_data:
+            if username == user['username']:
+                if user['username'] == username:
+                    try:
+                        passwd_verification_bool = ph.verify(user['password'], password)
+                        if passwd_verification_bool:
+                            return True
+                    except:
+                        pass
+            return False
+
+    # with open("_secret_auth_.json", "r") as auth_json:
+    #     authorized_user_data = json.load(auth_json)
+
+    # for registered_user in authorized_user_data:
+    #     if registered_user['username'] == username:
+    #         try:
+    #             passwd_verification_bool = ph.verify(registered_user['password'], password)
+    #             if passwd_verification_bool:
+    #                 return True
+    #         except:
+    #             pass
+    # return False
 
 
 def load_lottieurl(url: str) -> None:
@@ -125,19 +141,21 @@ def check_unique_usr(username_sign_up: str):
     return True
 
 
-def register_new_usr(name_sign_up: str, email_sign_up: str, username_sign_up: str, password_sign_up: str) -> None:
+def register_new_usr(db_conn: MongoClient, name_sign_up: str, email_sign_up: str, username_sign_up: str, password_sign_up: str) -> None:
     """
     Saves the information of the new user in the _secret_auth.json file.
     """
     new_usr_data = {'username': username_sign_up, 'name': name_sign_up, 'email': email_sign_up,
                     'password': ph.hash(password_sign_up)}
 
-    with open("_secret_auth_.json", "r") as auth_json:
-        authorized_user_data = json.load(auth_json)
+    db_conn['users'].insert_one(new_usr_data)
 
-    with open("_secret_auth_.json", "w") as auth_json_write:
-        authorized_user_data.append(new_usr_data)
-        json.dump(authorized_user_data, auth_json_write)
+    # with open("_secret_auth_.json", "r") as auth_json:
+    #     authorized_user_data = json.load(auth_json)
+    #
+    # with open("_secret_auth_.json", "w") as auth_json_write:
+    #     authorized_user_data.append(new_usr_data)
+    #     json.dump(authorized_user_data, auth_json_write)
 
 
 def check_username_exists(user_name: str) -> bool:
@@ -169,18 +187,18 @@ def check_email_exists(email_forgot_passwd: str):
     return False, None
 
 
-def get_email(username: str) -> [bool, str]:
+def get_email(db_conn: MongoClient, username: str) -> [bool, str]:
     """
     Get email from username if email exists in _secret_auth_.json
+    :param db_conn:
     :param username: username to login
     :return: email address as string
     """
-    with open("_secret_auth_.json", "r") as auth_json:
-        authorized_users_data = json.load(auth_json)
-
-        for user in authorized_users_data:
-            if user['username'] == username:
-                return True, user['email']
+    user_data = db_conn['users'].find_one({
+        "username": username
+    })
+    if user_data:
+        return True, user_data.get("email")
     return False, None
 
 
