@@ -14,10 +14,11 @@ def check_usr_pass(db_conn: MongoClient, username: str, password: str) -> bool:
     Authenticates the username and password.
     """
 
-    user_data = db_conn['users'].find(
+    user_data = db_conn['users'].find_one(
         {"username": username}
     )
     if user_data:
+        print(user_data)
         try:
             passwd_verification_bool = ph.verify(user_data['password'], password)
             if passwd_verification_bool:
