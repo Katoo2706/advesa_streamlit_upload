@@ -35,11 +35,11 @@ def upload_csv(title: str, accept_multiple: bool = False) -> dict[str, Any] | No
         tz_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         if len(files) == 1:
             return {
-                'name': f"{files[0].name}_{tz_now}",
+                'name': f"{files[0].name}_{tz_now}.csv",
                 'data': dict_files
             }
         else:
             return {
-                'name': f"{len(files)}_files_{tz_now}",
+                'name': f"{len(files)}_files_{tz_now}.csv",
                 'data': dict_files
             }
