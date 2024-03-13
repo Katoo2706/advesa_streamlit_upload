@@ -45,14 +45,11 @@ def merge_dict_df(dataframes_dict: dict):
 def map_customers(source_conn, dataframe, email_col: str):
     country_code_data = source_conn.batch_fetch_data(
         f"""
-        SELECT 
-            cs."email" as "{email_col}",
-            cs."date_created",
-            st."store_name"
-        FROM raw.customers as cs
-        LEFT JOIN raw.stores as st
-            ON st.store_id = cs.store_id
-        WHERE st."store_name" in ('HA', 'CB')
+            SELECT 
+                "email" as "{email_col}",
+                "date_created",
+                "store_name"
+            FROM streamlit.customers_list_cb_ha;
         """
     )
 
@@ -100,29 +97,29 @@ def map_customers(source_conn, dataframe, email_col: str):
         f"""
             SELECT
                 email as "{email_col}", 
-                first_order_data,
+                first_order_date,
                 store_name, order_total_cad, order_count
-            FROM ecommerce.f_clv_by_customers
-            WHERE order_status in ('completed', 'processing');
+            FROM streamlit.clv_by_customers_ha_cb;
             """
     )
+
     customers_clv_ha = pl.from_records(customers_clv_data).filter(pl.col("store_name") == "HA")
     customers_clv_ha = customers_clv_ha.rename(
         {
             "order_total_cad": "HA_order_total_cad",
             "order_count": "HA_order_count",
-            "first_order_data": "HA_first_order_data"
+            "first_order_date": "HA_first_order_date"
         }
-    ).select([email_col, "HA_order_total_cad", "HA_order_count", "HA_first_order_data"])
+    ).select([email_col, "HA_order_total_cad", "HA_order_count", "HA_first_order_date"])
 
     customers_clv_cb = pl.DataFrame(customers_clv_data).filter(pl.col("store_name") == "CB")
     customers_clv_cb = customers_clv_cb.rename(
         {
             "order_total_cad": "CB_order_total_cad",
             "order_count": "CB_order_count",
-            "first_order_data": "CB_first_order_data"
+            "first_order_date": "CB_first_order_date"
         }
-    ).select([email_col, "CB_order_total_cad", "CB_order_count", "CB_first_order_data"])
+    ).select([email_col, "CB_order_total_cad", "CB_order_count", "CB_first_order_date"])
 
     final_pl_df = pl.from_pandas(final_df)
 
@@ -138,3 +135,4 @@ def map_customers(source_conn, dataframe, email_col: str):
 
     df = final_pl_df.to_pandas()
     return df
+
