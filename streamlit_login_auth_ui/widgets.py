@@ -140,10 +140,10 @@ class __login__:
             email_sign_up = st.text_input("Email *", placeholder='Please enter your email')
             valid_email_check = check_valid_email(email_sign_up)
             valid_advesa_email_check = check_advesa_email(email_sign_up)
-            unique_email_check = check_unique_email(email_sign_up)
+            unique_email_check = check_unique_email(cli=MongoConnection,email_sign_up=email_sign_up)
 
             username_sign_up = st.text_input("Username *", placeholder='Enter a unique username')
-            unique_username_check = check_unique_usr(username_sign_up)
+            unique_username_check = check_unique_usr(cli=MongoConnection, username_sign_up=username_sign_up)
 
             password_sign_up = st.text_input("Password *", placeholder='Create a strong password', type='password')
 

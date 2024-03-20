@@ -2,11 +2,13 @@ import re
 import json
 from trycourier import Courier
 import secrets
-from argon2 import PasswordHasher
+from passlib.hash import pbkdf2_sha256
 import requests
 from pymongo import MongoClient
 
-ph = PasswordHasher()
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def check_usr_pass(db_conn: MongoClient, username: str, password: str) -> bool:
@@ -17,14 +19,11 @@ def check_usr_pass(db_conn: MongoClient, username: str, password: str) -> bool:
     user_data = db_conn['users'].find_one(
         {"username": username}
     )
-    if user_data:
-        try:
-            passwd_verification_bool = ph.verify(user_data['password'], password)
-            if passwd_verification_bool:
-                return True
-        except:
-            pass
+
+    if user_data and pbkdf2_sha256.verify(hash=user_data["password"], secret=password):
+        return True
     return False
+
 
 def load_lottieurl(url: str) -> None:
     """
@@ -71,18 +70,14 @@ def check_valid_email(email_sign_up: str) -> bool:
     return False
 
 
-def check_unique_email(email_sign_up: str) -> bool:
+def check_unique_email(cli, email_sign_up: str) -> bool:
     """
     Checks if the email already exists (since email needs to be unique).
     """
-    authorized_user_data_master = list()
-    with open("_secret_auth_.json", "r") as auth_json:
-        authorized_users_data = json.load(auth_json)
-
-        for user in authorized_users_data:
-            authorized_user_data_master.append(user['email'])
-
-    if email_sign_up in authorized_user_data_master:
+    user_data = cli['users'].find_one({
+        "email": email_sign_up
+    })
+    if user_data:
         return False
     return True
 
@@ -103,36 +98,30 @@ def non_empty_str_check(username_sign_up: str) -> bool:
     return True
 
 
-def check_unique_usr(username_sign_up: str):
+def check_unique_usr(cli, username_sign_up: str):
     """
     Checks if the username already exists (since username needs to be unique),
     also checks for non - empty username.
     """
-    authorized_user_data_master = list()
-    with open("_secret_auth_.json", "r") as auth_json:
-        authorized_users_data = json.load(auth_json)
-
-        for user in authorized_users_data:
-            authorized_user_data_master.append(user['username'])
-
-    if username_sign_up in authorized_user_data_master:
+    user_data = cli['users'].find_one({
+        "username": username_sign_up
+    })
+    if user_data:
         return False
-
-    non_empty_check = non_empty_str_check(username_sign_up)
-
-    if not non_empty_check:
-        return None
     return True
 
 
-def register_new_usr(db_conn: MongoClient, name_sign_up: str, email_sign_up: str, username_sign_up: str, password_sign_up: str) -> None:
+def register_new_usr(db_conn: MongoClient, name_sign_up: str, email_sign_up: str, username_sign_up: str,
+                     password_sign_up: str) -> None:
     """
     Saves the information of the new user in the _secret_auth.json file.
     """
     new_usr_data = {'username': username_sign_up, 'name': name_sign_up, 'email': email_sign_up,
-                    'password': ph.hash(password_sign_up)}
+                    'password': pbkdf2_sha256.hash(password_sign_up)}
 
     db_conn['users'].insert_one(new_usr_data)
+
+    logger.info(f"201: Created user {username_sign_up}")
 
     # with open("_secret_auth_.json", "r") as auth_json:
     #     authorized_user_data = json.load(auth_json)
@@ -227,7 +216,7 @@ def change_passwd(email_: str, random_password: str) -> None:
     with open("_secret_auth_.json", "w") as auth_json_:
         for user in authorized_users_data:
             if user['email'] == email_:
-                user['password'] = ph.hash(random_password)
+                user['password'] = pbkdf2_sha256.hash(random_password)
         json.dump(authorized_users_data, auth_json_)
 
 
@@ -242,7 +231,7 @@ def check_current_passwd(email_reset_passwd: str, current_passwd: str) -> bool:
         for user in authorized_users_data:
             if user['email'] == email_reset_passwd:
                 try:
-                    if ph.verify(user['password'], current_passwd) == True:
+                    if pbkdf2_sha256.verify(user['password'], current_passwd) == True:
                         return True
                 except:
                     pass
